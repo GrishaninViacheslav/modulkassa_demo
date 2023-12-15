@@ -1,6 +1,7 @@
 package ru.mars_groupe.moduletestapp
 
 import android.content.Intent
+import android.util.Log
 import ru.modulkassa.pos.integration.PluginServiceCallbackHolder
 import ru.modulkassa.pos.integration.core.OperationHandler
 import ru.modulkassa.pos.integration.core.PluginService
@@ -16,18 +17,15 @@ import ru.modulkassa.pos.integration.entity.payment.RefundRequest
 import ru.modulkassa.pos.integration.entity.payment.RefundResult
 import kotlin.concurrent.thread
 
-class NspkPaymentService: PluginService() {
-
+class NspkPaymentService : PluginService() {
     override fun createHandlers(): List<OperationHandler> {
         return listOf(
-            /**
-             * Оплата
-             */
             object : PayOperationHandler() {
-                override fun handlePay(payRequest: PayRequest,
-                                       callback: PluginServiceCallbackHolder
+                override fun handlePay(
+                    payRequest: PayRequest,
+                    callback: PluginServiceCallbackHolder
                 ) {
-                    // запрос на оплату обрабатывается в отдельной активити
+                    Log.d("DEBUG", "NspkPaymentService handlePay(payRequest = $payRequest)")
                     val payIntent = Intent(applicationContext, PayActivity::class.java)
                     callback.putToIntent(payIntent)
                     payIntent.putExtra(PayActivity.KEY_DATA, payRequest.toBundle())
@@ -39,18 +37,17 @@ class NspkPaymentService: PluginService() {
              * Возврат
              */
             object : RefundOperationHandler() {
-                override fun handleRefund(refundRequest: RefundRequest,
-                                          callback: PluginServiceCallbackHolder
+                override fun handleRefund(
+                    refundRequest: RefundRequest,
+                    callback: PluginServiceCallbackHolder
                 ) {
                     callback.get().succeeded(RefundResult(listOf()).toBundle())
                 }
             },
-            /**
-             * Отмена транзакции (оплаты или возврата)
-             */
             object : CancelOperationHandler() {
-                override fun handleCancel(cancelRequest: CancelRequest,
-                                          callback: PluginServiceCallbackHolder
+                override fun handleCancel(
+                    cancelRequest: CancelRequest,
+                    callback: PluginServiceCallbackHolder
                 ) {
                     thread() {
                         Thread.sleep(5_000)
@@ -58,15 +55,11 @@ class NspkPaymentService: PluginService() {
                     }
                 }
             },
-            /**
-             * Сверка итогов
-             */
             object : ReconciliationOperationHandler() {
                 override fun handleReconciliation(callback: PluginServiceCallbackHolder) {
                     callback.get().succeeded(ReconciliationResult(listOf()).toBundle())
                 }
             }
-
         )
     }
 }
